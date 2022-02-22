@@ -254,17 +254,19 @@ il_ia_lakes_filter <- il_ia_lakes %>%
 mapview(il_ia_lakes_filter
           , zcol = "lake_area_ha"
           , cex = "lake_area_ha_log"
-          # , legend = FALSE
           , alpha.regions = 0.5
           , map.types =  "OpenStreetMap"
           , label = c("gnis_name")
           , layer.name = "lake area (ha)"
           , popup = popupTable(
-              il_ia_lakes
+              il_ia_lakes_filter
               , zcol = c(
                 "gnis_name"
                 , "lake_area_ha"
+                , "lagoslakeid"
               )
+              , row.numbers = FALSE
+              , feature.id = FALSE
             )
       )
 

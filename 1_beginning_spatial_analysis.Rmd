@@ -24,6 +24,7 @@ library(LAGOSNE)
 library(USAboundaries)
 library(sf)
 library(mapview) #Interactive maps
+library(leafpop) #map html popup
 
 ```
 
@@ -146,7 +147,7 @@ df <- data.frame(cnt_lakes, st)
 
 #plot
 ggplot(df, aes(x = st, y = cnt_lakes, fill = st)) +
-  geom_col(alpha=0.9, width = 0.6) + 
+  geom_col(alpha=0.85, width = 0.5) + 
   geom_text(aes(label = scales::comma(cnt_lakes)), colour = "black", size = 4, vjust = "top") +
   scale_y_continuous(labels = label_comma()) +
   labs(
@@ -243,9 +244,33 @@ Make an interactive plot of lakes in Iowa and Illinois and color them
 by lake area in hectares
 
 ```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+#sort lakes so that largest lakes are on bottom
+mn_ia_lakes_filter <- mn_ia_lakes %>% 
+  arrange(-lake_area_ha) %>% 
+  slice(1:1000) %>% 
+  mutate(lake_area_ha_log = log10(lake_area_ha))
+
+#point map
+mapview(mn_ia_lakes_filter
+          , zcol = "lake_area_ha"
+          , cex = "lake_area_ha_log"
+          # , legend = FALSE
+          , alpha.regions = 0.5
+          , map.types =  "OpenStreetMap"
+          , label = c("gnis_name")
+          , layer.name = "lake area (ha)"
+          , popup = popupTable(
+              mn_ia_lakes_filter
+              , zcol = c(
+                "gnis_name"
+                , "lake_area_ha"
+              )
+            )
+      )
 
 ```
 
+<span style="color: blue;">The interactive map of lakes is dislaying only the largest 1000 lakes in Minnesota and Iowa. Because there were `r scales::comma(n_distinct(mn_ia_lakes$lagoslakeid))` lakes in the two states, a filter is necessary to limit the noise in the plot from too many points.</span>
 
 ## Question 5)
 What other data sources might we use to understand how reservoirs and 

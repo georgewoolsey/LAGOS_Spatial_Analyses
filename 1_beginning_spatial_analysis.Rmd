@@ -1,50 +1,56 @@
 ---
 title: "LAGOS Spatial Analysis"
-author: "Matthew Ross"
-date: "9/11/2019"
-output: html_document
+author: "Matthew Ross | Assignment completed by: George Woolsey"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    # code_folding: hide
 editor_options: 
   chunk_output_type: console
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), 'index.html')) })
 ---
 
-
-
 ```{r setup, include=FALSE}
-library(tidyverse) # Tidy packages
-library(sf) #Spatial package that can read and create shapefiles 
+library(tidyverse)
+library(lubridate)
+library(viridis)
+library(RColorBrewer)
+library(scales)
+# spatial analysis
+library(RApiSerialize)
+library(LAGOSNE)
+library(USAboundaries)
+library(sf)
 library(mapview) #Interactive maps
-library(LAGOSNE) #Lots and lots of clean lake data
-library(USAboundaries) #USA states and counties
-```
 
+```
 
 # LAGOS Analysis
 
-
 ## Loading in data
-
 
 ### First download and then specifically grab the locus (or site lat longs)
 
-```{r data-read}
+```{r, warning=F, message=F, results='hide'}
 # #Lagos download script
-LAGOSNE::lagosne_get(dest_folder = LAGOSNE:::lagos_path())
 
+# LAGOSNE::lagosne_get(dest_folder = LAGOSNE:::lagos_path())
 
 #Load in lagos
 lagos <- lagosne_load()
+names(lagos)
 
 #Grab the lake centroid info
 lake_centers <- lagos$locus
-
-
+str(lake_centers)
 
 ```
 
-
-
 ### Convert to spatial data
-```{r}
+
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
 #Look at the column names
 #names(lake_centers)
 
@@ -55,31 +61,31 @@ lake_centers <- lagos$locus
 #View(lake_centers %>% slice(1:100))
 
 spatial_lakes <- st_as_sf(lake_centers,coords=c('nhd_long','nhd_lat'),
-                          crs=4326) %>%
-  st_transform(2163)
+                          crs=4326) %>% # EPSG:4326 = WGS 84
+  st_transform(2163) # EPSG:2163 = US National Atlas Equal Area
 
 #Subset for plotting
 subset_spatial <- spatial_lakes %>%
   slice(1:100) 
 
-subset_baser <- spatial_lakes[1:100,]
+# subset_baser <- spatial_lakes[1:100,]
 
 #Dynamic mapviewer
 mapview(subset_spatial)
 
 ```
 
-
 ### Subset to only Minnesota
 
-```{r}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
 states <- us_states()
 
 #Plot all the states to check if they loaded
 #mapview(states)
+
 minnesota <- states %>%
   filter(name == 'Minnesota') %>%
-  st_transform(2163)
+  st_transform(2163) # EPSG:2163 = US National Atlas Equal Area
 
 #Subset lakes based on spatial position
 minnesota_lakes <- spatial_lakes[minnesota,]
@@ -92,48 +98,157 @@ minnesota_lakes %>%
 ```
 
 
-
 # In-Class work
 
+## Question 1)
+Show a map outline of Iowa and Illinois (similar to Minnesota map upstream)
 
-## 1) Show a map outline of Iowa and Illinois (similar to Minnesota map upstream)
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
 
-```{r}
+#filter states dataset from USA USAboundaries us_states()
+il_ia <- states %>%
+  filter(name %in% c("Illinois", "Iowa")) %>%
+  st_transform(2163) # EPSG:2163 = US National Atlas Equal Area
 
+#see names of basemaps available to pass to "map.types" option below
+# names(leaflet.providers::providers_loaded()$providers)
 
+#make map
+mapview(il_ia
+        , zcol = "name"
+        , legend = FALSE
+        , col.regions = turbo(n= min(5, n_distinct(il_ia$name)))
+        , alpha.regions = 0.5
+        , map.types =  "OpenStreetMap"
+        , label = c("stusps")
+    )
 
 ```
 
 
-
-## 2) Subset LAGOS data to these sites, how many sites are in Illinois and Iowa
+## Question 2)
+Subset LAGOS data to these sites, how many sites are in Illinois and Iowa
 combined? How does this compare to Minnesota?
 
-```{r}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+#Subset lakes based on spatial position
+il_ia_lakes <- spatial_lakes[il_ia,]
+
+#create counts dataset
+cnt_lakes <- c(
+  n_distinct(il_ia_lakes$lagoslakeid)
+  , n_distinct(minnesota_lakes$lagoslakeid)
+)
+
+st <- c("Iowa + Illinois", "Minnesota")
+
+df <- data.frame(cnt_lakes, st)
+
+#plot
+ggplot(df, aes(x = st, y = cnt_lakes, fill = st)) +
+  geom_col(alpha=0.9, width = 0.6) + 
+  geom_text(aes(label = scales::comma(cnt_lakes)), colour = "black", size = 4, vjust = "top") +
+  scale_y_continuous(labels = label_comma()) +
+  labs(
+      title = "Iowa + Illinois Lakes vs. Minnesota Lakes"
+    ) +
+  xlab("") +
+  ylab("# Lakes") +
+  scale_fill_viridis(discrete = TRUE, option = "cividis") +
+  theme_bw() +
+  theme(
+    legend.position="none"
+    , axis.text.y = element_text(size = 11)
+    , axis.text.x = element_text(size = 11)
+  ) 
 
 ```
 
+<span style="color: blue;">There are `r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))` lakes in Iowa and Illinois combined while Minnesota has `r scales::comma(n_distinct(minnesota_lakes$lagoslakeid))` lakes. There are `r scales::comma(n_distinct(minnesota_lakes$lagoslakeid) - n_distinct(il_ia_lakes$lagoslakeid))` more lakes in Minnesota than in Iowa and Illinois combined.</span>
 
-## 3) What is the distribution of lake size in Iowa vs. Minnesota?
 
-- Here I want to see a histogram plot with lake size on x-axis and frequency on 
-y axis (check out geom_histogram)
+## Question 3)
+What is the distribution of lake size in Iowa vs. Minnesota? Here I want to see a histogram plot with lake size on x-axis and frequency on y axis (check out geom_histogram)
 
-```{r}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+# get Minnesota and Iowa polygons
+mn_ia <- states %>%
+  filter(name %in% c("Minnesota", "Iowa")) %>%
+  st_transform(2163) # EPSG:2163 = US National Atlas Equal Area
 
+# spatial join points to polygons
+mn_ia_lakes <- st_join(spatial_lakes, mn_ia, left = FALSE)
+
+# count lakes
+# n_distinct(mn_ia_lakes$lagoslakeid)
+
+#plot
+ggplot(mn_ia_lakes, aes(lake_area_ha, fill = name)) +
+  geom_histogram(bins = 15, alpha = 0.8) +
+  facet_grid(. ~ name) +
+  scale_y_continuous(labels = label_comma()) +
+  labs(
+      title = "Distribution of Lake Area in Minnesota and Iowa"
+    ) +
+  xlab("Lake Area (ha)") +
+  ylab("# Lakes") +
+  scale_fill_viridis(discrete = TRUE, option = "cividis") +
+  theme_bw() +
+  theme(
+    legend.position="none"
+    , axis.text.y = element_text(size = 11)
+    , axis.text.x = element_text(size = 11)
+  ) 
 
 ```
 
+<span style="color: blue;">This histogram is not very informative due to outliers at the high end of lake area. Below is a quick solution to bin the top 5% of lakes based on area into their own bucket. In addition, to get a better comparison between states, we can use the `after_stat(density)` option to plot density on the y-axis instead of count. </span>
 
-## 4) Make an interactive plot of lakes in Iowa and Illinois and color them
+
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+# truncate top 5% of lakes in area into own bin
+mn_ia_lakes <- mn_ia_lakes %>% 
+  mutate(lake_area_ha_trunc = ifelse(
+      lake_area_ha >= quantile(mn_ia_lakes$lake_area_ha, 1-0.05)
+      , quantile(mn_ia_lakes$lake_area_ha, 1-0.05)
+      , lake_area_ha)
+  )
+
+# plot
+ggplot(mn_ia_lakes, aes(lake_area_ha_trunc, after_stat(density), fill = name)) +
+  geom_histogram(bins = 30, alpha = 0.8) +
+  facet_grid(. ~ name) +
+  scale_y_continuous(labels = label_percent(accuracy = 1)) +
+  labs(
+      title = "Distribution of Lake Area in Minnesota and Iowa"
+    ) +
+  xlab("Lake Area (ha)") +
+  ylab("% Lakes") +
+  scale_fill_viridis(discrete = TRUE, option = "cividis") +
+  theme_bw() +
+  theme(
+    legend.position="none"
+    , axis.text.y = element_text(size = 11)
+    , axis.text.x = element_text(size = 11)
+    , strip.text.x = element_text(size = 13)
+  ) 
+
+```
+
+<span style="color: blue;">This histogram is more informative and allows us to see that Iowa has a higher propoertion of small lakes compared to Minnesota. There are many more large lakes (over ~`r round(quantile(mn_ia_lakes$lake_area_ha, 1-0.05))` ha) in Minnesota than in Iowa.</span>
+
+
+## Question 4)
+Make an interactive plot of lakes in Iowa and Illinois and color them
 by lake area in hectares
 
-```{r}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
 
 ```
 
 
-## 5) What other data sources might we use to understand how reservoirs and 
+## Question 5)
+What other data sources might we use to understand how reservoirs and 
 natural lakes vary in size in these three states? 
 
 

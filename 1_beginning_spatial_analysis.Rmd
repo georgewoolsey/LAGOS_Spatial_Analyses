@@ -245,13 +245,13 @@ by lake area in hectares
 
 ```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
 #sort lakes so that largest lakes are on bottom
-mn_ia_lakes_filter <- mn_ia_lakes %>% 
+il_ia_lakes_filter <- il_ia_lakes %>% 
   arrange(-lake_area_ha) %>% 
   slice(1:1000) %>% 
   mutate(lake_area_ha_log = log10(lake_area_ha))
 
 #point map
-mapview(mn_ia_lakes_filter
+mapview(il_ia_lakes_filter
           , zcol = "lake_area_ha"
           , cex = "lake_area_ha_log"
           # , legend = FALSE
@@ -260,7 +260,7 @@ mapview(mn_ia_lakes_filter
           , label = c("gnis_name")
           , layer.name = "lake area (ha)"
           , popup = popupTable(
-              mn_ia_lakes_filter
+              il_ia_lakes
               , zcol = c(
                 "gnis_name"
                 , "lake_area_ha"
@@ -270,10 +270,17 @@ mapview(mn_ia_lakes_filter
 
 ```
 
-<span style="color: blue;">The interactive map of lakes is dislaying only the largest 1000 lakes in Minnesota and Iowa. Because there were `r scales::comma(n_distinct(mn_ia_lakes$lagoslakeid))` lakes in the two states, a filter is necessary to limit the noise in the plot from too many points.</span>
+<span style="color: blue;">The interactive map of lakes is displaying only the largest 1000 lakes in Illinois and Iowa. Because there were `r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))` lakes in the two states, a filter is helpful in limiting the noise in the plot from too many points.</span>
 
 ## Question 5)
-What other data sources might we use to understand how reservoirs and 
-natural lakes vary in size in these three states? 
+What other data sources might we use to understand how reservoirs and natural lakes vary in size in these three states? 
+
+<span style="color: blue;">The r package ['LAGOSNE'](https://cran.r-project.org/web/packages/LAGOSNE/LAGOSNE.pdf) aids users in accessing data from the [Lake Multi-Scaled Geospatial and Temporal Database](https://lagoslakes.org/). In addition to the `locus` dataset utilized above, the package also contains the `lakes_limno` dataset which includes measures of mean and maximum lake depth (meters). The package also makes the following datasets available:</span>
+
+<span style="color: blue;">* `chag` datasets contain information on climate, hydrology, atmospheric deposition, and surficial geology characteristics.</span>
+
+<span style="color: blue;">* `conn` datasets contain lake, stream, and wetland abundance and connectivity metrics.</span>
+
+<span style="color: blue;">* `lulc` datasets contain information on the land use and land cover (LULC) characteristics.</span>
 
 

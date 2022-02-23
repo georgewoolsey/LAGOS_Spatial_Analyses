@@ -172,7 +172,7 @@ Why might this be the case?
 <span style="color: blue;">A Secchi disk is a black and white disk that is lowered by hand into the water to the depth at which it vanishes from sight; the distance to vanishing is then recorded ([US Environmental Protection Agency](https://archive.epa.gov/water/archive/web/html/155.html)). The clearer the water, the greater the distance. Chlorophyll a is the predominant type of chlorophyll found in green plants and algae ([US Environmental Protection Agency](https://www.epa.gov/national-aquatic-resource-surveys/indicators-chlorophyll)). The higher the 
 concentration of plants and algae in a lake, the lower the sub-surface visibility.</span>
 
-![](https://www.epa.gov/sites/default/files/styles/medium/public/2014-07/chlorophylla.jpg)
+![](https://www.lakescientist.com/wp-content/uploads/2010/04/HAB-LakeErie-300x225.jpg)
 <span style="color: blue;">Blue-green algae bloom on the shore of Catawba Island, Ohio, in Lake Erie, summer 2009. Photo: NOAA.</span>
 
 
@@ -252,8 +252,53 @@ Then you will want to group by state and sum all the observations in that state 
       , last_date = max(last_date)
       , mean_chl_wgt_area = weighted.mean(mean_chl, w = lake_area_ha, na.rm = TRUE)
       , mean_secchi_wgt_area = weighted.mean(mean_secchi, w = lake_area_ha, na.rm = TRUE)
-    )
-  summary(state_lake_clarity)
+    ) %>% 
+    arrange(-count_clarity_measurements) 
+
+# plot data
+ggplot(state_lake_clarity, aes(x=count_clarity_measurements, y = reorder(state_name, count_clarity_measurements), fill = count_clarity_measurements)) +
+  geom_col(alpha=0.9, width = 0.6) + 
+  geom_text(aes(label = scales::comma(count_clarity_measurements, accuracy = 1)), colour = "black", angle = 0, size = 3, hjust = "left", nudge_x = 100) +
+  scale_x_continuous(labels = label_comma(), limits = c(0, max(state_lake_clarity$count_clarity_measurements)*1.05) ) +
+  labs(
+      title = "Number of Lake Clarity Measurements by State"
+      , subtitle = "only observations with both Secchi and Chlorophyll measurements included"
+    ) +
+  ylab("") +
+  xlab("# Clarity Measurements") +
+  scale_fill_viridis(option = "viridis", direction = -1) +
+  theme_bw() +
+  theme(
+    legend.position="none"
+    , axis.text.y = element_text(size = 9)
+    , axis.text.x = element_text(size = 11, angle = 0)
+  )
+```
+
+<span style="color: blue;"> Using the `epi_nutr` dataset filtered for observations that have non-null values in both the `chla` and `secchi` column, `r (state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$state_name` is the state with the most lake clarity measurements with `r max(state_lake_clarity$count_clarity_measurements)` observations covering `r scales::comma((state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$count_lakes_w_data)` lakes.</span>
+
+### 2c) Bonus
+Count the unique lakes in each state with at least one clarity measurment
+
+```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+# plot # lakes with clarity data
+ggplot(state_lake_clarity, aes(x=count_lakes_w_data, y = reorder(state_name, count_lakes_w_data), fill = count_lakes_w_data)) +
+  geom_col(alpha=0.9, width = 0.6) + 
+  geom_text(aes(label = comma(count_lakes_w_data, accuracy = 1)), colour = "black", angle = 0, size = 3, hjust = "left", nudge_x = 20) +
+  scale_x_continuous(labels = label_comma(), limits = c(0, max(state_lake_clarity$count_lakes_w_data)*1.07) ) +
+  labs(
+      title = "Number of Lakes w/ at least one clarity measurement by State"
+      , subtitle = "only observations with both Secchi and Chlorophyll measurements included"
+    ) +
+  ylab("") +
+  xlab("# Lakes w/ Clarity Measurements") +
+  scale_fill_viridis(option = "cividis", direction = -1) +
+  theme_bw() +
+  theme(
+    legend.position="none"
+    , axis.text.y = element_text(size = 9)
+    , axis.text.x = element_text(size = 11, angle = 0)
+  )
 ```
 
 ## Question 3) 

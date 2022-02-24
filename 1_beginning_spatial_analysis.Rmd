@@ -165,7 +165,7 @@ ggplot(df, aes(x = st, y = cnt_lakes, fill = st)) +
 
 ```
 
-<span style="color: blue;">There are `r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))` lakes in Iowa and Illinois combined while Minnesota has `r scales::comma(n_distinct(minnesota_lakes$lagoslakeid))` lakes. There are `r scales::comma(n_distinct(minnesota_lakes$lagoslakeid) - n_distinct(il_ia_lakes$lagoslakeid))` more lakes in Minnesota than in Iowa and Illinois combined.</span>
+<span style="color: blue;">There are **`r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))`** lakes in Iowa and Illinois combined while Minnesota has **`r scales::comma(n_distinct(minnesota_lakes$lagoslakeid))`** lakes. There are **`r scales::comma(n_distinct(minnesota_lakes$lagoslakeid) - n_distinct(il_ia_lakes$lagoslakeid))`** more lakes in Minnesota than in Iowa and Illinois combined.</span>
 
 
 ## Question 3)
@@ -236,7 +236,7 @@ ggplot(mn_ia_lakes, aes(lake_area_ha_trunc, after_stat(density), fill = name)) +
 
 ```
 
-<span style="color: blue;">This histogram is more informative and allows us to see that Iowa has a higher propoertion of small lakes compared to Minnesota. There are many more large lakes (over ~`r round(quantile(mn_ia_lakes$lake_area_ha, 1-0.05))` ha) in Minnesota than in Iowa.</span>
+<span style="color: blue;">This histogram is more informative and allows us to see that Iowa has a higher propoertion of small lakes compared to Minnesota. There are many more large lakes (over **~`r round(quantile(mn_ia_lakes$lake_area_ha, 1-0.05))`** ha) in Minnesota than in Iowa.</span>
 
 
 ## Question 4)
@@ -272,7 +272,7 @@ mapview(il_ia_lakes_filter
 
 ```
 
-<span style="color: blue;">The interactive map of lakes is displaying only the largest 1000 lakes in Illinois and Iowa. Because there were `r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))` lakes in the two states, a filter is helpful in limiting the noise in the plot from too many points.</span>
+<span style="color: blue;">The interactive map of lakes is displaying only the largest 1000 lakes in Illinois and Iowa. Because there were **`r scales::comma(n_distinct(il_ia_lakes$lagoslakeid))`** lakes in the two states, a filter is helpful in limiting the noise in the plot from too many points.</span>
 
 ## Question 5)
 What other data sources might we use to understand how reservoirs and natural lakes vary in size in these three states? 
@@ -285,4 +285,5 @@ What other data sources might we use to understand how reservoirs and natural la
 
 <span style="color: blue;">* `lulc` datasets contain information on the land use and land cover (LULC) characteristics.</span>
 
-
+## Link to part 2
+[Go to part 2](https://georgewoolsey.github.io/LAGOS_Spatial_Analyses/part2#Class_work)

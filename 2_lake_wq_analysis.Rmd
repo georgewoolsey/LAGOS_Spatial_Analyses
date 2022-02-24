@@ -164,7 +164,7 @@ lm_secchi_chla <- lm(mean_secchi ~ mean_chl, data = mean_values_200)
 ```
 
 
-<span style="color: blue;">The relationship between Secchi disk transparency (m) and Chlorophyll a (mcg/L) in the lakes included in this analysis is negative. As Chlorophyll a concentration increases, the depth at which a Secchi disk can be seen decreases. Based on a simple linear regression for every one unit increase in Chlorophyll a (mcg/L), the Secchi disk transparency changes by `r round(summary(lm_secchi_chla)$coefficients["mean_chl", "Estimate"], 2)`m. The variation in Chlorophyll a explains `r scales::percent(summary(lm_secchi_chla)$adj.r.squared)` of the variation in Secchi disk transparency for lakes included in this analysis.</span>
+<span style="color: blue;">The relationship between Secchi disk transparency (m) and Chlorophyll a (mcg/L) in the lakes included in this analysis is negative. As Chlorophyll a concentration increases, the depth at which a Secchi disk can be seen decreases. Based on a simple linear regression for every one unit increase in Chlorophyll a (mcg/L), the Secchi disk transparency changes by **`r round(summary(lm_secchi_chla)$coefficients["mean_chl", "Estimate"], 2)`m**. The variation in Chlorophyll a explains **`r scales::percent(summary(lm_secchi_chla)$adj.r.squared)`** of the variation in Secchi disk transparency for lakes included in this analysis.</span>
 
 ### 1a)
 Why might this be the case? 
@@ -173,6 +173,7 @@ Why might this be the case?
 concentration of plants and algae in a lake, the lower the sub-surface visibility.</span>
 
 ![](https://www.lakescientist.com/wp-content/uploads/2010/04/HAB-LakeErie-300x225.jpg)
+
 <span style="color: blue;">Blue-green algae bloom on the shore of Catawba Island, Ohio, in Lake Erie, summer 2009. Photo: NOAA.</span>
 
 
@@ -240,7 +241,7 @@ spatial_lake_clarity <- spatial_lake_clarity %>%
 ### 2c) 
 Then you will want to group by state and sum all the observations in that state and arrange that data from most to least total observations per state. 
 
-```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 7}
 # summarize lake clarity data to state level
   state_lake_clarity <- spatial_lake_clarity %>% 
     group_by(statefp, state_name) %>% 
@@ -275,12 +276,12 @@ ggplot(state_lake_clarity, aes(x=count_clarity_measurements, y = reorder(state_n
   )
 ```
 
-<span style="color: blue;"> Using the `epi_nutr` dataset filtered for observations that have non-null values in both the `chla` and `secchi` column, `r (state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$state_name` is the state with the most lake clarity measurements with `r max(state_lake_clarity$count_clarity_measurements)` observations covering `r scales::comma((state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$count_lakes_w_data)` lakes.</span>
+<span style="color: blue;"> Using the `epi_nutr` dataset filtered for observations that have non-null values in both the `chla` and `secchi` column, **`r (state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$state_name`** is the state with the most lake clarity measurements with **`r scales::comma(max(state_lake_clarity$count_clarity_measurements))`** observations covering **`r scales::comma((state_lake_clarity %>% filter(count_clarity_measurements == max(state_lake_clarity$count_clarity_measurements)))$count_lakes_w_data)`** lakes.</span>
 
 ### 2c) Bonus
 Count the unique lakes in each state with at least one clarity measurment
 
-```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
+```{r, warning=F, message=F, fig.width = 8, fig.height = 7}
 # plot # lakes with clarity data
 ggplot(state_lake_clarity, aes(x=count_lakes_w_data, y = reorder(state_name, count_lakes_w_data), fill = count_lakes_w_data)) +
   geom_col(alpha=0.9, width = 0.6) + 
@@ -302,12 +303,35 @@ ggplot(state_lake_clarity, aes(x=count_lakes_w_data, y = reorder(state_name, cou
 ```
 
 ## Question 3) 
-Is there a spatial pattern in Secchi disk depth for lakes with at least 200 
-observations?
+Is there a spatial pattern in Secchi disk depth for lakes with at least 200 observations?
 
 ```{r, warning=F, message=F, fig.width = 8, fig.height = 5}
-## Your code here
-
+mapviewOptions(legend.pos = "bottomright", homebutton.pos = "bottomleft")
+# using the same dataset used to map chlorophyll a measurements
+mapview(mean_spatial
+          , zcol = "mean_secchi"
+          , cex = "mean_secchi"
+          , alpha.regions = 0.5
+          , map.types =  "OpenStreetMap"
+          , label = c("gnis_name")
+          , col.regions = mako(n = 6, direction = -1)
+          , at = seq(0, 10, 2)
+          , legend = TRUE
+          , layer.name = "Secchi disk transparency (m)"
+          , popup = popupTable(
+              mean_spatial
+              , zcol = c(
+                "gnis_name"
+                , "mean_secchi"
+                , "mean_chl"
+              )
+              , row.numbers = FALSE
+              , feature.id = FALSE
+            )
+      )
 ```
 
+<span style="color: blue;">Yes, there appears to be a spatial pattern in Secchi disk transparency (m) for lakes with at least 200 observations. Based on the map above, lakes in the eastern states (e.g. New York, New Hampshire) generally have visibility of the Secchi disk at a deeper level than lakes in the western states (e.g. Minnesota, Missouri).</span>
 
+## Link to part 1
+[Go to part 1](https://georgewoolsey.github.io/LAGOS_Spatial_Analyses/#In-Class_work)
